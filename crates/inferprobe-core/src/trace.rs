@@ -49,9 +49,15 @@ pub(crate) fn escape_json(s: &str) -> String {
         match c {
             '"' => escaped.push_str("\\\""),
             '\\' => escaped.push_str("\\\\"),
+            '\x08' => escaped.push_str("\\b"),
+            '\x0c' => escaped.push_str("\\f"),
             '\n' => escaped.push_str("\\n"),
             '\r' => escaped.push_str("\\r"),
             '\t' => escaped.push_str("\\t"),
+            c if (c as u32) <= 0x1f => {
+                use std::fmt::Write;
+                let _ = write!(escaped, "\\u{:04x}", c as u32);
+            }
             other => escaped.push(other),
         }
     }
@@ -138,5 +144,17 @@ mod tests {
         assert!(chrome.contains("\"ph\":\"X\""));
         assert!(chrome.contains("\"ts\":150"));
         assert!(chrome.contains("\"dur\":850"));
+    }
+
+    #[test]
+    fn test_escape_json_control_chars() {
+        let input = "hello\x00world\x08\x0c\x1f\n\r\t\"\\";
+        let escaped = escape_json(input);
+        assert!(escaped.contains("\\u0000"));
+        assert!(escaped.contains("\\b"));
+        assert!(escaped.contains("\\f"));
+        assert!(escaped.contains("\\u001f"));
+        assert!(escaped.contains("\\n"));
+        assert!(escaped.contains("\\\""));
     }
 }
