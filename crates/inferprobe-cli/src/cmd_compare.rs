@@ -3,7 +3,10 @@
 use std::fs;
 use std::process;
 
-use inferprobe_core::{evaluate_regression, LatencySummary, RegressionPolicy};
+use inferprobe_core::{
+    evaluate_regression, parse_trace_json_or_ndjson, LatencyHistogram, LatencySummary,
+    RegressionPolicy,
+};
 
 pub fn exec_compare(base_p: &str, curr_p: &str, p99_th: Option<f64>, mean_th: Option<f64>) {
     let mut policy = RegressionPolicy::default();
@@ -13,12 +16,24 @@ pub fn exec_compare(base_p: &str, curr_p: &str, p99_th: Option<f64>, mean_th: Op
     if let Some(v) = mean_th {
         policy.max_mean_regression_pct = v;
     }
-    let b_str = fs::read_to_string(base_p).expect("read baseline");
-    let c_str = fs::read_to_string(curr_p).expect("read current");
-    let b_p99 = parse_key(&b_str, "p99_us").unwrap_or(0.0);
-    let b_mean = parse_key(&b_str, "mean_us").unwrap_or(0.0);
-    let c_p99 = parse_key(&c_str, "p99_us").unwrap_or(0.0);
-    let c_mean = parse_key(&c_str, "mean_us").unwrap_or(0.0);
+    let b_str = fs::read_to_string(base_p).unwrap_or_else(|e| {
+        eprintln!("Error: failed to read baseline '{}': {}", base_p, e);
+        process::exit(1);
+    });
+    let c_str = fs::read_to_string(curr_p).unwrap_or_else(|e| {
+        eprintln!("Error: failed to read current '{}': {}", curr_p, e);
+        process::exit(1);
+    });
+
+    let (b_mean, b_p99) = extract_metrics(&b_str).unwrap_or_else(|e| {
+        eprintln!("Error: baseline '{}' invalid: {}", base_p, e);
+        process::exit(1);
+    });
+    let (c_mean, c_p99) = extract_metrics(&c_str).unwrap_or_else(|e| {
+        eprintln!("Error: current '{}' invalid: {}", curr_p, e);
+        process::exit(1);
+    });
+
     let d_base = dummy_sum(b_mean, b_p99);
     let d_curr = dummy_sum(c_mean, c_p99);
     let rep = evaluate_regression(&d_base, &d_curr, 1024, 1024, &policy);
@@ -32,6 +47,25 @@ pub fn exec_compare(base_p: &str, curr_p: &str, p99_th: Option<f64>, mean_th: Op
         eprintln!("FAILED: Regression gate violated: {:?}", rep.violations);
         process::exit(2);
     }
+}
+
+fn extract_metrics(content: &str) -> Result<(f64, f64), String> {
+    if let (Some(mean), Some(p99)) = (parse_key(content, "mean_us"), parse_key(content, "p99_us")) {
+        return Ok((mean, p99));
+    }
+    // Attempt summarizing spans from TraceSession
+    if let Ok(session) = parse_trace_json_or_ndjson(content) {
+        if !session.is_empty() {
+            let mut hist = LatencyHistogram::new();
+            for span in session.spans() {
+                hist.record(span.duration_us as f64);
+            }
+            if let Some(sum) = hist.summarize(None) {
+                return Ok((sum.mean_us, sum.p99_us));
+            }
+        }
+    }
+    Err("missing required metrics 'mean_us' and 'p99_us'".into())
 }
 
 pub fn parse_key(json: &str, key: &str) -> Option<f64> {
