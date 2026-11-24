@@ -35,3 +35,23 @@ fn test_parse_missing_fields_and_malformed() {
     let invalid = "not a json";
     assert!(parse_ndjson_spans(invalid).is_err());
 }
+
+#[test]
+fn test_parse_trace_json_bracket_and_backslash_and_whitespace_defects() {
+    let bad_bracket = "{\"spans\":][}";
+    assert!(crate::ndjson::parse_trace_json_or_ndjson(bad_bracket).is_err());
+
+    let win_path = "{\"spans\":[{\"name\":\"path C:\\\\\",\"stage\":\"infer\",\"start_us\":10,\"duration_us\":20}]}";
+    let session =
+        crate::ndjson::parse_trace_json_or_ndjson(win_path).expect("parse win path");
+    assert_eq!(session.len(), 1);
+    assert_eq!(session.spans()[0].name, "path C:\\");
+
+    let formatted = "{\n  \"spans\" : [\n    {\"name\":\"op1\",\"stage\":\"infer\",\"start_us\":1,\"duration_us\":2}\n  ]\n}";
+    let session =
+        crate::ndjson::parse_trace_json_or_ndjson(formatted).expect("parse formatted json");
+    assert_eq!(session.len(), 1);
+
+    let bad_inner = "{\"spans\":[123, true, \"hello\"]}";
+    assert!(crate::ndjson::parse_trace_json_or_ndjson(bad_inner).is_err());
+}
