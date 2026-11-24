@@ -21,7 +21,7 @@ pub fn parse_json_str(chars: &mut Peekable<Chars<'_>>) -> Result<String, String>
     }
     let mut s = String::new();
     let mut escaped = false;
-    while let Some(c) = chars.next() {
+    for c in chars.by_ref() {
         if escaped {
             match c {
                 '"' => s.push('"'),
