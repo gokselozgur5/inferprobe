@@ -37,6 +37,16 @@ fn test_parse_nvidia_smi_csv_malformed() {
 }
 
 #[test]
+fn test_parse_nvidia_smi_csv_nan_inf_rejected() {
+    let csv = "GPU 0, NaN, 100, 200, inf, -inf\n";
+    let gpus = parse_nvidia_smi_csv(csv);
+    assert_eq!(gpus.len(), 1);
+    assert_eq!(gpus[0].util_pct, None);
+    assert_eq!(gpus[0].temp_c, None);
+    assert_eq!(gpus[0].power_w, None);
+}
+
+#[test]
 fn test_hardware_snapshot_serialization_and_collect() {
     let snap = HardwareSnapshot::new(
         "linux-x86_64",
