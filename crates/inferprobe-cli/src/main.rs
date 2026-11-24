@@ -76,13 +76,20 @@ fn print_usage() {
 }
 
 fn exec_bench(iterations: usize, out: Option<String>, chrome: Option<String>) {
+    if iterations == 0 {
+        eprintln!("Error: iterations must be >= 1");
+        process::exit(1);
+    }
     let stages = vec![
         PipelineStageSpec::new("preprocess", 1_000, "cpu"),
         PipelineStageSpec::new("inference", 4_000, "gpu:0"),
         PipelineStageSpec::new("postprocess", 1_000, "cpu"),
     ];
     let (histogram, session) = run_synthetic_pipeline(&stages, iterations);
-    let summary = histogram.summarize(None).expect("summary");
+    let summary = histogram.summarize(None).unwrap_or_else(|| {
+        eprintln!("Error: failed to generate latency summary");
+        process::exit(1);
+    });
     println!("Profile complete ({} iterations):", iterations);
     println!(
         "  p50: {:.2} us | p90: {:.2} us | p99: {:.2} us",
@@ -93,17 +100,26 @@ fn exec_bench(iterations: usize, out: Option<String>, chrome: Option<String>) {
         summary.mean_us, summary.stddev_us, summary.throughput_ops_sec
     );
     if let Some(path) = out {
-        fs::write(&path, summary.to_json()).expect("write summary");
+        if let Err(e) = fs::write(&path, summary.to_json()) {
+            eprintln!("Error: failed to write summary to '{}': {}", path, e);
+            process::exit(1);
+        }
         println!("Summary saved to {}", path);
     }
     if let Some(path) = chrome {
-        fs::write(&path, session.to_chrome_trace()).expect("write trace");
+        if let Err(e) = fs::write(&path, session.to_chrome_trace()) {
+            eprintln!("Error: failed to write chrome trace to '{}': {}", path, e);
+            process::exit(1);
+        }
         println!("Chrome trace saved to {}", path);
     }
 }
 
 fn exec_inspect(path: &str) {
-    let content = fs::read_to_string(path).expect("read file");
+    let content = fs::read_to_string(path).unwrap_or_else(|e| {
+        eprintln!("Error: failed to read file '{}': {}", path, e);
+        process::exit(1);
+    });
     println!("Inspect Summary for {}", path);
     if let (Some(p50), Some(p90), Some(p99)) = (
         parse_key(&content, "p50_us"),
