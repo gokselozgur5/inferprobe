@@ -89,3 +89,50 @@ fn test_cli_wave2_hw_and_run_flow() {
     let trace_content = fs::read_to_string(&run_trace).expect("read run trace");
     assert!(trace_content.contains("subprocess"));
 }
+
+#[test]
+fn test_cli_compare_failures_and_traces() {
+    let bin = get_bin_path();
+    let tmp_dir = std::env::temp_dir();
+    let invalid_json = tmp_dir.join("invalid_metrics.json");
+    fs::write(&invalid_json, "{\"hello\": 123}").unwrap();
+
+    // Comparing invalid json with missing metrics must fail closed (exit non-zero)
+    let status = Command::new(bin)
+        .args([
+            "compare",
+            invalid_json.to_str().unwrap(),
+            invalid_json.to_str().unwrap(),
+        ])
+        .status()
+        .expect("exec compare");
+    assert!(!status.success());
+
+    // Comparing trace session files (both spans and traceEvents) must succeed
+    let trace1 = tmp_dir.join("trace1.json");
+    let trace2 = tmp_dir.join("trace2.json");
+    fs::write(
+        &trace1,
+        r#"{"spans":[{"name":"a","stage":"s","start_us":0,"duration_us":100}]}"#,
+    )
+    .unwrap();
+    fs::write(
+        &trace2,
+        r#"{"traceEvents":[{"name":"b","cat":"s","ph":"X","ts":0,"dur":110,"args":{}}]}"#,
+    )
+    .unwrap();
+
+    let status = Command::new(bin)
+        .args([
+            "compare",
+            trace1.to_str().unwrap(),
+            trace2.to_str().unwrap(),
+            "--max-p99-pct",
+            "100.0",
+            "--max-mean-pct",
+            "100.0",
+        ])
+        .status()
+        .expect("compare traces");
+    assert!(status.success());
+}
