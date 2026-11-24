@@ -5,9 +5,11 @@ pub mod skip;
 pub mod span_parser;
 #[cfg(test)]
 mod tests;
+pub mod trace_json;
 
 pub use parser_helpers::skip_whitespace;
 pub use span_parser::parse_span_line;
+pub use trace_json::parse_trace_json_or_ndjson;
 
 use crate::trace::TraceSession;
 
