@@ -5,6 +5,7 @@ pub mod breakdown_svg;
 pub mod css;
 pub mod escape;
 pub mod hw_table;
+pub mod js;
 pub mod kpi;
 #[cfg(test)]
 mod tests;
@@ -17,6 +18,7 @@ use crate::trace::TraceSession;
 /// Renders a full self-contained HTML + SVG flamegraph report.
 pub fn render_html_report(session: &TraceSession, hw: Option<&HardwareSnapshot>) -> String {
     let css = css::get_report_css();
+    let js = js::get_report_js();
     let kpi = kpi::render_kpi_cards(session);
     let (breakdown, _) = breakdown::compute_stage_breakdown(session);
     let breakdown_bars = breakdown_svg::render_breakdown_bars(&breakdown);
@@ -43,9 +45,10 @@ pub fn render_html_report(session: &TraceSession, hw: Option<&HardwareSnapshot>)
   {}
   {}
 </div>
+<script>{}</script>
 </body>
 </html>"#,
-        css, kpi, breakdown_bars, timeline_svg, hw_table
+        css, kpi, breakdown_bars, timeline_svg, hw_table, js
     )
 }
 

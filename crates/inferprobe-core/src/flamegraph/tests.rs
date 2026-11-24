@@ -41,6 +41,9 @@ fn test_render_html_report_contains_kpi_and_timeline() {
     assert!(html.contains("kernel_matmul"));
     assert!(html.contains("NVIDIA A100"));
     assert!(html.contains("HORIZONTAL EXECUTION TIMELINE"));
+    assert!(html.contains("flame-controls"));
+    assert!(html.contains("breakdown-table"));
+    assert!(html.contains("filterSpans"));
 }
 
 #[test]
