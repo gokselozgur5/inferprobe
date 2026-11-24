@@ -137,4 +137,15 @@ mod tests {
         assert!((s.p50_us - 50.5).abs() < 1e-6);
         assert!((s.throughput_ops_sec - 1000.0).abs() < 1e-3);
     }
+
+    #[test]
+    fn test_chronological_jitter() {
+        let mut h = LatencyHistogram::new();
+        for _ in 0..5 {
+            h.record(10.0);
+            h.record(110.0);
+        }
+        let s = h.summarize(None).expect("summary");
+        assert!((s.jitter_us - 100.0).abs() < 1e-6);
+    }
 }
