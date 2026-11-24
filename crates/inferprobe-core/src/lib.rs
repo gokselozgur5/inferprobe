@@ -1,12 +1,16 @@
-//! Deterministic profiling primitives for Edge AI and pipeline execution.
+//! Deterministic Edge AI, GPU & Pipeline Profiler Core.
+//!
+//! Provides zero-dependency latency percentiles, structured tracing,
+//! Chrome Trace export, telemetry sampling, and regression gating.
 
-pub mod telemetry;
-pub use telemetry::{run_synthetic_pipeline, PipelineStageSpec, ProcessTelemetry};
 pub mod gate;
 pub mod histogram;
-pub use gate::{evaluate_regression, RegressionPolicy, RegressionReport};
+pub mod telemetry;
 pub mod trace;
+
+pub use gate::{evaluate_regression, RegressionPolicy, RegressionReport};
 pub use histogram::{LatencyHistogram, LatencySummary};
+pub use telemetry::{run_synthetic_pipeline, PipelineStageSpec, ProcessTelemetry};
 pub use trace::{Span, TraceSession};
 
 /// Returns the inferprobe core version string.
