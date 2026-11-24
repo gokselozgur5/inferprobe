@@ -3,7 +3,9 @@
 use std::fs;
 use std::process;
 
-use inferprobe_core::{collect_host_hardware, parse_ndjson_spans, render_html_report, TraceSession};
+use inferprobe_core::{
+    collect_host_hardware, parse_trace_json_or_ndjson, render_html_report, TraceSession,
+};
 
 /// Executes the report subcommand.
 pub fn exec_report(trace_path: &str, out_path: &str) {
@@ -29,5 +31,5 @@ pub fn exec_report(trace_path: &str, out_path: &str) {
 }
 
 fn parse_trace_content(content: &str) -> Result<TraceSession, String> {
-    parse_ndjson_spans(content)
+    parse_trace_json_or_ndjson(content)
 }
