@@ -21,7 +21,7 @@ pub fn parse_json_str(chars: &mut Peekable<Chars<'_>>) -> Result<String, String>
     }
     let mut s = String::new();
     let mut escaped = false;
-    for c in chars.by_ref() {
+    while let Some(c) = chars.next() {
         if escaped {
             match c {
                 '"' => s.push('"'),
@@ -32,6 +32,17 @@ pub fn parse_json_str(chars: &mut Peekable<Chars<'_>>) -> Result<String, String>
                 'n' => s.push('\n'),
                 'r' => s.push('\r'),
                 't' => s.push('\t'),
+                'u' => {
+                    let mut hex = String::with_capacity(4);
+                    for _ in 0..4 {
+                        let h = chars.next().ok_or("truncated unicode escape")?;
+                        hex.push(h);
+                    }
+                    let code =
+                        u32::from_str_radix(&hex, 16).map_err(|_| "invalid unicode hex escape")?;
+                    let ch = char::from_u32(code).ok_or("invalid unicode scalar value")?;
+                    s.push(ch);
+                }
                 other => s.push(other),
             }
             escaped = false;
