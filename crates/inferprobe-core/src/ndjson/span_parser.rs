@@ -37,11 +37,12 @@ pub fn parse_span_line(line: &str) -> Result<Option<Span>, String> {
             skip_whitespace(&mut chars);
             match key.as_str() {
                 "name" => name = Some(parse_json_str(&mut chars)?),
-                "stage" => stage = Some(parse_json_str(&mut chars)?),
-                "start_us" => start_us = Some(parse_json_u64(&mut chars)?),
-                "duration_us" => duration_us = Some(parse_json_u64(&mut chars)?),
+                "stage" | "cat" => stage = Some(parse_json_str(&mut chars)?),
+                "start_us" | "ts" => start_us = Some(parse_json_u64(&mut chars)?),
+                "duration_us" | "dur" => duration_us = Some(parse_json_u64(&mut chars)?),
                 "device" => device = Some(parse_json_str(&mut chars)?),
                 "rss_kb" => rss_kb = Some(parse_json_u64(&mut chars)?),
+                "args" => parse_args_obj(&mut chars, &mut device, &mut rss_kb)?,
                 _ => skip_value(&mut chars)?,
             }
         } else {
@@ -59,4 +60,41 @@ pub fn parse_span_line(line: &str) -> Result<Option<Span>, String> {
     );
 
     Ok(Some(span))
+}
+
+fn parse_args_obj(
+    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    device: &mut Option<String>,
+    rss_kb: &mut Option<u64>,
+) -> Result<(), String> {
+    skip_whitespace(chars);
+    if chars.next() != Some('{') {
+        return Err("expected '{' for args object".into());
+    }
+    while let Some(&c) = chars.peek() {
+        if c.is_whitespace() || c == ',' {
+            chars.next();
+            continue;
+        }
+        if c == '}' {
+            chars.next();
+            return Ok(());
+        }
+        if c == '"' {
+            let key = parse_json_str(chars)?;
+            skip_whitespace(chars);
+            if chars.next() != Some(':') {
+                return Err("expected ':' in args object".into());
+            }
+            skip_whitespace(chars);
+            match key.as_str() {
+                "device" => *device = Some(parse_json_str(chars)?),
+                "rss_kb" => *rss_kb = Some(parse_json_u64(chars)?),
+                _ => skip_value(chars)?,
+            }
+        } else {
+            return Err("expected key in args object".into());
+        }
+    }
+    Err("unterminated args object".into())
 }
