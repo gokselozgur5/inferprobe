@@ -46,7 +46,7 @@ fn parse_f64_clean(s: &str) -> Option<f64> {
     if s.is_empty() || s.contains("[N/A]") || s == "N/A" {
         return None;
     }
-    s.parse::<f64>().ok()
+    s.parse::<f64>().ok().filter(|v| v.is_finite())
 }
 
 fn parse_u64_clean(s: &str) -> Option<u64> {
