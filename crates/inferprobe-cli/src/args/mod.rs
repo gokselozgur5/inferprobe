@@ -1,23 +1,13 @@
-//! Argument parsing and CLI command definitions.
+//! Main CLI argument router.
 
-#[derive(Debug, PartialEq)]
-pub enum CliCommand {
-    Bench {
-        iterations: usize,
-        out_file: Option<String>,
-        chrome_trace_file: Option<String>,
-    },
-    Compare {
-        baseline_file: String,
-        current_file: String,
-        max_p99_pct: Option<f64>,
-        max_mean_pct: Option<f64>,
-    },
-    Inspect {
-        file: String,
-    },
-    Help,
-}
+pub mod parse_report_ingest;
+pub mod parse_run;
+pub mod types;
+
+pub use types::CliCommand;
+
+use parse_report_ingest::{parse_ingest, parse_report};
+use parse_run::parse_run;
 
 pub fn parse_cli_args(args: &[String]) -> Result<CliCommand, String> {
     if args.len() < 2 {
@@ -27,6 +17,10 @@ pub fn parse_cli_args(args: &[String]) -> Result<CliCommand, String> {
         "bench" => parse_bench(&args[2..]),
         "compare" => parse_compare(&args[2..]),
         "inspect" => parse_inspect(&args[2..]),
+        "report" => parse_report(&args[2..]),
+        "ingest" => parse_ingest(&args[2..]),
+        "run" => parse_run(&args[2..]),
+        "hw" => Ok(CliCommand::Hw),
         "-h" | "--help" | "help" => Ok(CliCommand::Help),
         other => Err(format!("unknown command '{}'", other)),
     }
