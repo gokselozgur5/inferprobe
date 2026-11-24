@@ -1,0 +1,8 @@
+[package]
+name = "inferprobe-core"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic core profiling, percentiles, trace sessions, and regression gate"
+license = "MIT"
+
+[dependencies]

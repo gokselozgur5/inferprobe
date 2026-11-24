@@ -1,0 +1,13 @@
+[package]
+name = "inferprobe-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI frontend for inferprobe profiler and regression gates"
+license = "MIT"
+
+[[bin]]
+name = "inferprobe"
+path = "src/main.rs"
+
+[dependencies]
+inferprobe-core = { path = "../inferprobe-core" }
