@@ -20,8 +20,8 @@ pub fn compute_stage_breakdown(session: &TraceSession) -> (Vec<StageStat>, u64) 
     for span in session.spans() {
         let entry = map.entry(span.stage.clone()).or_insert((0, 0));
         entry.0 += 1;
-        entry.1 += span.duration_us;
-        grand_total_us += span.duration_us;
+        entry.1 = entry.1.saturating_add(span.duration_us);
+        grand_total_us = grand_total_us.saturating_add(span.duration_us);
     }
 
     let mut list = Vec::new();
