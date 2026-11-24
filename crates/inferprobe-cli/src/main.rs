@@ -4,6 +4,7 @@ mod cmd_hw;
 mod cmd_ingest;
 mod cmd_report;
 mod cmd_run;
+mod hud;
 
 use std::env;
 use std::fs;
@@ -15,6 +16,7 @@ use cmd_hw::exec_hw;
 use cmd_ingest::exec_ingest;
 use cmd_report::exec_report;
 use cmd_run::exec_run;
+use hud::print_bench_hud;
 use inferprobe_core::{run_synthetic_pipeline, PipelineStageSpec};
 
 fn main() {
@@ -90,15 +92,7 @@ fn exec_bench(iterations: usize, out: Option<String>, chrome: Option<String>) {
         eprintln!("Error: failed to generate latency summary");
         process::exit(1);
     });
-    println!("Profile complete ({} iterations):", iterations);
-    println!(
-        "  p50: {:.2} us | p90: {:.2} us | p99: {:.2} us",
-        summary.p50_us, summary.p90_us, summary.p99_us
-    );
-    println!(
-        "  mean: {:.2} us (stddev: {:.2} us) | throughput: {:.2} ops/sec",
-        summary.mean_us, summary.stddev_us, summary.throughput_ops_sec
-    );
+    print_bench_hud(&summary, histogram.samples(), iterations);
     if let Some(path) = out {
         if let Err(e) = fs::write(&path, summary.to_json()) {
             eprintln!("Error: failed to write summary to '{}': {}", path, e);
