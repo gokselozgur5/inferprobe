@@ -27,3 +27,114 @@ impl LatencySummary {
         )
     }
 }
+
+/// Accumulator for latency measurements.
+#[derive(Debug, Default, Clone)]
+pub struct LatencyHistogram {
+    samples: Vec<f64>,
+}
+
+impl LatencyHistogram {
+    pub fn new() -> Self {
+        Self {
+            samples: Vec::new(),
+        }
+    }
+
+    pub fn record(&mut self, latency_us: f64) {
+        if latency_us >= 0.0 && !latency_us.is_nan() && !latency_us.is_infinite() {
+            self.samples.push(latency_us);
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.samples.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.samples.is_empty()
+    }
+
+    pub fn summarize(&self, total_wall_time_us: Option<f64>) -> Option<LatencySummary> {
+        if self.samples.is_empty() {
+            return None;
+        }
+        let mut sorted = self.samples.clone();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let count = sorted.len();
+        let (min_us, max_us) = (sorted[0], sorted[count - 1]);
+        let sum: f64 = sorted.iter().copied().sum();
+        let mean_us = sum / (count as f64);
+        let variance = sorted.iter().map(|&v| (v - mean_us).powi(2)).sum::<f64>() / (count as f64);
+        let stddev_us = variance.sqrt();
+        let jitter_us = if count > 1 {
+            (1..count)
+                .map(|i| (sorted[i] - sorted[i - 1]).abs())
+                .sum::<f64>()
+                / ((count - 1) as f64)
+        } else {
+            0.0
+        };
+        let p50_us = percentile(&sorted, 50.0);
+        let p90_us = percentile(&sorted, 90.0);
+        let p95_us = percentile(&sorted, 95.0);
+        let p99_us = percentile(&sorted, 99.0);
+        let p999_us = percentile(&sorted, 99.9);
+        let wall_sec = total_wall_time_us
+            .filter(|&w| w > 0.0)
+            .map(|w| w / 1e6)
+            .unwrap_or(if sum > 0.0 { sum / 1e6 } else { 1.0 });
+        let throughput_ops_sec = if wall_sec > 0.0 {
+            (count as f64) / wall_sec
+        } else {
+            0.0
+        };
+        Some(LatencySummary {
+            count,
+            min_us,
+            max_us,
+            mean_us,
+            stddev_us,
+            jitter_us,
+            p50_us,
+            p90_us,
+            p95_us,
+            p99_us,
+            p999_us,
+            throughput_ops_sec,
+        })
+    }
+}
+
+fn percentile(sorted: &[f64], pct: f64) -> f64 {
+    if sorted.is_empty() {
+        return 0.0;
+    }
+    if sorted.len() == 1 {
+        return sorted[0];
+    }
+    let rank = (pct.clamp(0.0, 100.0) / 100.0) * ((sorted.len() - 1) as f64);
+    let (l, u) = (rank.floor() as usize, rank.ceil() as usize);
+    if l == u {
+        sorted[l]
+    } else {
+        sorted[l] + (rank - l as f64) * (sorted[u] - sorted[l])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_histogram_metrics() {
+        let mut h = LatencyHistogram::new();
+        for i in 1..=100 {
+            h.record(i as f64);
+        }
+        let s = h.summarize(Some(100_000.0)).expect("summary");
+        assert_eq!(s.count, 100);
+        assert!((s.mean_us - 50.5).abs() < 1e-6);
+        assert!((s.p50_us - 50.5).abs() < 1e-6);
+        assert!((s.throughput_ops_sec - 1000.0).abs() < 1e-3);
+    }
+}
