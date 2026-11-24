@@ -42,3 +42,30 @@ fn test_render_html_report_contains_kpi_and_timeline() {
     assert!(html.contains("NVIDIA A100"));
     assert!(html.contains("HORIZONTAL EXECUTION TIMELINE"));
 }
+
+#[test]
+fn test_render_timeline_svg_u64_overflow_safety() {
+    let mut session = TraceSession::new();
+    session.add_span(Span::new(
+        "overflow_span",
+        "infer",
+        u64::MAX - 10,
+        20,
+        "gpu:0",
+        100,
+    ));
+    session.add_span(Span::new("normal_span", "infer", 100, 200, "gpu:0", 100));
+    let svg = crate::flamegraph::timeline_svg::render_timeline_svg(&session);
+    assert!(svg.contains("overflow_span"));
+}
+
+#[test]
+fn test_compute_stage_breakdown_overflow_safety() {
+    let mut session = TraceSession::new();
+    session.add_span(Span::new("s1", "stage_a", 0, u64::MAX - 5, "cpu", 0));
+    session.add_span(Span::new("s2", "stage_a", 10, 20, "cpu", 0));
+    let (stats, total) = crate::flamegraph::breakdown::compute_stage_breakdown(&session);
+    assert_eq!(stats.len(), 1);
+    assert_eq!(stats[0].total_us, u64::MAX);
+    assert_eq!(total, u64::MAX);
+}
