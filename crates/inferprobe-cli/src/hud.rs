@@ -57,11 +57,7 @@ pub fn generate_jitter_bar(jitter_us: f64, mean_us: f64, width: usize) -> String
 }
 
 /// Prints a high-density, professional ANSI telemetry HUD.
-pub fn print_bench_hud(
-    summary: &LatencySummary,
-    samples: &[f64],
-    iterations: usize,
-) {
+pub fn print_bench_hud(summary: &LatencySummary, samples: &[f64], iterations: usize) {
     let use_color = std::env::var("NO_COLOR").is_err();
 
     let c_cyan = if use_color { "\x1b[38;5;39m" } else { "" };
@@ -84,12 +80,18 @@ pub fn print_bench_hud(
     let spark = generate_sparkline(samples, 32);
     let jitter_bar = generate_jitter_bar(summary.jitter_us, summary.mean_us, 20);
 
-    println!("{}+------------------------------------------------------------------------+{}", c_dim, c_reset);
+    println!(
+        "{}+------------------------------------------------------------------------+{}",
+        c_dim, c_reset
+    );
     println!(
         "{}|{}  {}INFERPROBE // BENCHMARK TELEMETRY HUD{}                                  {}|{}",
         c_dim, c_reset, c_bold, c_reset, c_dim, c_reset
     );
-    println!("{}+------------------------------------------------------------------------+{}", c_dim, c_reset);
+    println!(
+        "{}+------------------------------------------------------------------------+{}",
+        c_dim, c_reset
+    );
     println!(
         "{}|{}  Iterations:  {:>8}    {}[{:<32}]{}       {}|{}",
         c_dim, c_reset, iterations, c_cyan, spark, c_reset, c_dim, c_reset
@@ -98,24 +100,57 @@ pub fn print_bench_hud(
         "{}|{}  Throughput:  {:>8.1} ops/s  Min / Max:  {:.1} us / {:.1} us           {}|{}",
         c_dim, c_reset, summary.throughput_ops_sec, summary.min_us, summary.max_us, c_dim, c_reset
     );
-    println!("{}+------------------------------------------------------------------------+{}", c_dim, c_reset);
+    println!(
+        "{}+------------------------------------------------------------------------+{}",
+        c_dim, c_reset
+    );
     println!(
         "{}|{}  PERCENTILES:                                                              {}|{}",
         c_dim, c_reset, c_dim, c_reset
     );
     println!(
         "{}|{}    p50:   {}{:>8.2} us{}    p95:   {}{:>8.2} us{}                           {}|{}",
-        c_dim, c_reset, c_green, summary.p50_us, c_reset, c_yellow, summary.p95_us, c_reset, c_dim, c_reset
+        c_dim,
+        c_reset,
+        c_green,
+        summary.p50_us,
+        c_reset,
+        c_yellow,
+        summary.p95_us,
+        c_reset,
+        c_dim,
+        c_reset
     );
     println!(
         "{}|{}    p90:   {}{:>8.2} us{}    p99:   {}{:>8.2} us{}                           {}|{}",
-        c_dim, c_reset, c_green, summary.p90_us, c_reset, c_yellow, summary.p99_us, c_reset, c_dim, c_reset
+        c_dim,
+        c_reset,
+        c_green,
+        summary.p90_us,
+        c_reset,
+        c_yellow,
+        summary.p99_us,
+        c_reset,
+        c_dim,
+        c_reset
     );
     println!(
         "{}|{}    Mean:  {}{:>8.2} us{}    p99.9: {}{:>8.2} us{}                           {}|{}",
-        c_dim, c_reset, c_cyan, summary.mean_us, c_reset, c_yellow, summary.p999_us, c_reset, c_dim, c_reset
+        c_dim,
+        c_reset,
+        c_cyan,
+        summary.mean_us,
+        c_reset,
+        c_yellow,
+        summary.p999_us,
+        c_reset,
+        c_dim,
+        c_reset
     );
-    println!("{}+------------------------------------------------------------------------+{}", c_dim, c_reset);
+    println!(
+        "{}+------------------------------------------------------------------------+{}",
+        c_dim, c_reset
+    );
     println!(
         "{}|{}  JITTER & NOISE:                                                           {}|{}",
         c_dim, c_reset, c_dim, c_reset
@@ -124,7 +159,10 @@ pub fn print_bench_hud(
         "{}|{}    StdDev: {:>8.2} us   Jitter: {:>8.2} us [{:<20}]      {}|{}",
         c_dim, c_reset, summary.stddev_us, summary.jitter_us, jitter_bar, c_dim, c_reset
     );
-    println!("{}+------------------------------------------------------------------------+{}", c_dim, c_reset);
+    println!(
+        "{}+------------------------------------------------------------------------+{}",
+        c_dim, c_reset
+    );
 }
 
 #[cfg(test)]

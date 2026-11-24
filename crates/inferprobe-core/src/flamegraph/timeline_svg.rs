@@ -32,7 +32,9 @@ pub fn render_timeline_svg(session: &TraceSession) -> String {
     let svg_h = (session.len() * row_h + 50).max(140);
 
     let mut out = String::new();
-    out.push_str("<div class=\"section-title\">HORIZONTAL EXECUTION TIMELINE &amp; FLAMEGRAPH</div>\n");
+    out.push_str(
+        "<div class=\"section-title\">HORIZONTAL EXECUTION TIMELINE &amp; FLAMEGRAPH</div>\n",
+    );
 
     // Controls: search filter and zoom controls
     out.push_str(r#"<div class="flame-controls">
