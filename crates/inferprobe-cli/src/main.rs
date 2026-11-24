@@ -1,5 +1,9 @@
 mod args;
 mod cmd_compare;
+mod cmd_hw;
+mod cmd_ingest;
+mod cmd_report;
+mod cmd_run;
 
 use std::env;
 use std::fs;
@@ -7,6 +11,10 @@ use std::process;
 
 use args::{parse_cli_args, CliCommand};
 use cmd_compare::{exec_compare, parse_key};
+use cmd_hw::exec_hw;
+use cmd_ingest::exec_ingest;
+use cmd_report::exec_report;
+use cmd_run::exec_run;
 use inferprobe_core::{run_synthetic_pipeline, PipelineStageSpec};
 
 fn main() {
@@ -28,6 +36,22 @@ fn main() {
             exec_compare(&baseline_file, &current_file, max_p99_pct, max_mean_pct);
         }
         Ok(CliCommand::Inspect { file }) => exec_inspect(&file),
+        Ok(CliCommand::Report {
+            trace_file,
+            out_file,
+        }) => exec_report(&trace_file, &out_file),
+        Ok(CliCommand::Ingest {
+            ndjson_file,
+            out_file,
+        }) => exec_ingest(&ndjson_file, &out_file),
+        Ok(CliCommand::Run {
+            cmd,
+            args,
+            iterations,
+            out_file,
+            html_file,
+        }) => exec_run(&cmd, &args, iterations, out_file, html_file),
+        Ok(CliCommand::Hw) => exec_hw(),
         Ok(CliCommand::Help) => print_usage(),
         Err(err) => {
             eprintln!("Error: {}", err);
@@ -45,6 +69,10 @@ fn print_usage() {
         "  inferprobe compare <baseline.json> <current.json> [--max-p99-pct F] [--max-mean-pct F]"
     );
     println!("  inferprobe inspect <trace.json>");
+    println!("  inferprobe report <trace.json> --out <report.html>");
+    println!("  inferprobe ingest <spans.ndjson> --out <trace.json>");
+    println!("  inferprobe run [--iterations N] [--out FILE] [--html FILE] -- <cmd> [args...]");
+    println!("  inferprobe hw");
 }
 
 fn exec_bench(iterations: usize, out: Option<String>, chrome: Option<String>) {
