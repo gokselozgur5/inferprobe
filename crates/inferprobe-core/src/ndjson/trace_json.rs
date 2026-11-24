@@ -28,34 +28,50 @@ fn parse_trace_json_object(json: &str) -> Result<TraceSession, String> {
         .rfind(']')
         .ok_or_else(|| "missing ']' in spans array".to_string())?;
 
+    if open_bracket >= close_bracket {
+        return Err("invalid brackets in spans array".into());
+    }
+
     let inner = &json[open_bracket + 1..close_bracket];
     let mut session = TraceSession::new();
 
     let mut in_quote = false;
+    let mut escaped = false;
     let mut depth = 0;
     let mut span_start = None;
 
     for (idx, b) in inner.bytes().enumerate() {
-        if b == b'"' && (idx == 0 || inner.as_bytes()[idx - 1] != b'\\') {
-            in_quote = !in_quote;
-        } else if !in_quote {
-            if b == b'{' {
-                if depth == 0 {
-                    span_start = Some(idx);
-                }
-                depth += 1;
-            } else if b == b'}' {
-                depth -= 1;
-                if depth == 0 {
-                    if let Some(start) = span_start {
-                        let span_str = &inner[start..=idx];
-                        if let Some(span) = parse_span_line(span_str)? {
-                            session.add_span(span);
-                        }
-                    }
-                    span_start = None;
-                }
+        if in_quote {
+            if escaped {
+                escaped = false;
+            } else if b == b'\\' {
+                escaped = true;
+            } else if b == b'"' {
+                in_quote = false;
             }
+        } else if b == b'"' {
+            in_quote = true;
+        } else if b == b'{' {
+            if depth == 0 {
+                span_start = Some(idx);
+            }
+            depth += 1;
+        } else if b == b'}' {
+            depth -= 1;
+            if depth == 0 {
+                if let Some(start) = span_start {
+                    let span_str = &inner[start..=idx];
+                    if let Some(span) = parse_span_line(span_str)? {
+                        session.add_span(span);
+                    }
+                }
+                span_start = None;
+            }
+        } else if depth == 0 && !b.is_ascii_whitespace() && b != b',' {
+            return Err(format!(
+                "unexpected character in spans array: '{}'",
+                b as char
+            ));
         }
     }
 
