@@ -42,8 +42,7 @@ fn test_parse_trace_json_bracket_and_backslash_and_whitespace_defects() {
     assert!(crate::ndjson::parse_trace_json_or_ndjson(bad_bracket).is_err());
 
     let win_path = "{\"spans\":[{\"name\":\"path C:\\\\\",\"stage\":\"infer\",\"start_us\":10,\"duration_us\":20}]}";
-    let session =
-        crate::ndjson::parse_trace_json_or_ndjson(win_path).expect("parse win path");
+    let session = crate::ndjson::parse_trace_json_or_ndjson(win_path).expect("parse win path");
     assert_eq!(session.len(), 1);
     assert_eq!(session.spans()[0].name, "path C:\\");
 
