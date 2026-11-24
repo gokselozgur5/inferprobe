@@ -7,7 +7,7 @@ use crate::trace::TraceSession;
 pub fn render_kpi_cards(session: &TraceSession) -> String {
     let mut hist = LatencyHistogram::new();
     for span in session.spans() {
-        hist.record(span.duration_us);
+        hist.record(span.duration_us as f64);
     }
     let summary = hist.summarize(None);
 
