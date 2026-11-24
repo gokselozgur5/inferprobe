@@ -37,12 +37,14 @@ pub fn exec_compare(base_p: &str, curr_p: &str, p99_th: Option<f64>, mean_th: Op
 pub fn parse_key(json: &str, key: &str) -> Option<f64> {
     let needle = format!("\"{}\":", key);
     let pos = json.find(&needle)?;
-    let rem = &json[pos + needle.len()..];
+    let rem = json[pos + needle.len()..].trim_start();
     let num: String = rem
         .chars()
-        .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-' || *c == '+')
+        .take_while(|c| {
+            c.is_ascii_digit() || *c == '.' || *c == '-' || *c == '+' || *c == 'e' || *c == 'E'
+        })
         .collect();
-    num.parse::<f64>().ok()
+    num.parse::<f64>().ok().filter(|v| v.is_finite())
 }
 
 fn dummy_sum(mean: f64, p99: f64) -> LatencySummary {
