@@ -22,22 +22,8 @@ mod tests {
     #[test]
     fn test_render_html_report_contains_kpi_and_timeline() {
         let mut session = TraceSession::new();
-        session.add_span(Span::new(
-            "kernel_matmul",
-            "infer",
-            0,
-            1200,
-            "gpu:0",
-            40960,
-        ));
-        session.add_span(Span::new(
-            "layer_norm",
-            "infer",
-            1200,
-            300,
-            "gpu:0",
-            40960,
-        ));
+        session.add_span(Span::new("kernel_matmul", "infer", 0, 1200, "gpu:0", 40960));
+        session.add_span(Span::new("layer_norm", "infer", 1200, 300, "gpu:0", 40960));
 
         let hw = HardwareSnapshot::new(
             "linux-x86_64",

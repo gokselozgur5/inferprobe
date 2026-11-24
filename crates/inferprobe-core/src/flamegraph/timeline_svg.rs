@@ -13,7 +13,12 @@ pub fn render_timeline_svg(session: &TraceSession) -> String {
         return "<div class=\"muted\">No spans recorded in trace.</div>".into();
     }
 
-    let min_start = session.spans().iter().map(|s| s.start_us).min().unwrap_or(0);
+    let min_start = session
+        .spans()
+        .iter()
+        .map(|s| s.start_us)
+        .min()
+        .unwrap_or(0);
     let max_end = session
         .spans()
         .iter()

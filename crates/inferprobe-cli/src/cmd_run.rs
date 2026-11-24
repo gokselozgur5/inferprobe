@@ -3,9 +3,7 @@
 use std::fs;
 use std::process;
 
-use inferprobe_core::{
-    collect_host_hardware, render_html_report, run_subprocess_benchmark,
-};
+use inferprobe_core::{collect_host_hardware, render_html_report, run_subprocess_benchmark};
 
 /// Executes the run subcommand.
 pub fn exec_run(
@@ -15,8 +13,8 @@ pub fn exec_run(
     out_file: Option<String>,
     html_file: Option<String>,
 ) {
-    let (session, exit_code) = run_subprocess_benchmark(cmd, args, iterations)
-        .unwrap_or_else(|e| {
+    let (session, exit_code) =
+        run_subprocess_benchmark(cmd, args, iterations).unwrap_or_else(|e| {
             eprintln!("Error executing subprocess benchmark: {}", e);
             process::exit(1);
         });
