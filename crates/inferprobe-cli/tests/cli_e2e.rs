@@ -43,6 +43,8 @@ fn test_cli_bench_compare_flow() {
             curr_out.to_str().unwrap(),
             "--max-p99-pct",
             "1000.0",
+            "--max-mean-pct",
+            "1000.0",
         ])
         .status()
         .expect("compare ok");
