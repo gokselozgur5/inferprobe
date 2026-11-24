@@ -1,0 +1,62 @@
+//! NDJSON line parser for execution spans.
+
+use super::parser_helpers::{parse_json_str, skip_whitespace};
+use super::skip::{parse_json_u64, skip_value};
+use crate::trace::Span;
+
+/// Parses a line of NDJSON into a `Span`.
+pub fn parse_span_line(line: &str) -> Result<Option<Span>, String> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    if !trimmed.starts_with('{') || !trimmed.ends_with('}') {
+        return Err(format!("line is not a valid JSON object: {}", trimmed));
+    }
+    let inner = &trimmed[1..trimmed.len() - 1];
+
+    let mut name = None;
+    let mut stage = None;
+    let mut start_us = None;
+    let mut duration_us = None;
+    let mut device = None;
+    let mut rss_kb = None;
+
+    let mut chars = inner.chars().peekable();
+    while let Some(&c) = chars.peek() {
+        if c.is_whitespace() || c == ',' {
+            chars.next();
+            continue;
+        }
+        if c == '"' {
+            let key = parse_json_str(&mut chars)?;
+            skip_whitespace(&mut chars);
+            if chars.next() != Some(':') {
+                return Err(format!("expected ':' after key '{}'", key));
+            }
+            skip_whitespace(&mut chars);
+            match key.as_str() {
+                "name" => name = Some(parse_json_str(&mut chars)?),
+                "stage" => stage = Some(parse_json_str(&mut chars)?),
+                "start_us" => start_us = Some(parse_json_u64(&mut chars)?),
+                "duration_us" => duration_us = Some(parse_json_u64(&mut chars)?),
+                "device" => device = Some(parse_json_str(&mut chars)?),
+                "rss_kb" => rss_kb = Some(parse_json_u64(&mut chars)?),
+                _ => skip_value(&mut chars)?,
+            }
+        } else {
+            return Err("expected key in JSON object".into());
+        }
+    }
+
+    let span = Span::new(
+        name.ok_or_else(|| "missing required field 'name'".to_string())?,
+        stage.unwrap_or_else(|| "default".to_string()),
+        start_us.ok_or_else(|| "missing required field 'start_us'".to_string())?,
+        duration_us.ok_or_else(|| "missing required field 'duration_us'".to_string())?,
+        device.unwrap_or_else(|| "cpu".to_string()),
+        rss_kb.unwrap_or(0),
+    );
+
+    Ok(Some(span))
+}
