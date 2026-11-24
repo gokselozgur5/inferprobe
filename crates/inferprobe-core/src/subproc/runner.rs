@@ -30,7 +30,7 @@ pub fn run_subprocess_benchmark(
             .map_err(|e| format!("failed to spawn '{}': {}", cmd, e))?;
 
         let duration_us = run_start.elapsed().as_micros() as u64;
-        let rss_kb = ProcessTelemetry::current_rss_kb().unwrap_or(0);
+        let rss_kb = ProcessTelemetry::sample().rss_kb;
         let code = status.code().unwrap_or(1);
         last_exit_code = code;
 
