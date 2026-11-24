@@ -6,11 +6,18 @@ use crate::trace::TraceSession;
 /// Parses a trace JSON string (`{"spans":[...]}`) or NDJSON spans into a `TraceSession`.
 pub fn parse_trace_json_or_ndjson(content: &str) -> Result<TraceSession, String> {
     let trimmed = content.trim();
-    if trimmed.starts_with("{\"spans\":") {
+    if is_spans_json(trimmed) {
         parse_trace_json_object(trimmed)
     } else {
         crate::ndjson::parse_ndjson_spans(trimmed)
     }
+}
+
+fn is_spans_json(content: &str) -> bool {
+    let mut chars = content.chars().filter(|c| !c.is_whitespace());
+    chars.next() == Some('{')
+        && chars.by_ref().take(7).collect::<String>() == "\"spans\""
+        && chars.next() == Some(':')
 }
 
 fn parse_trace_json_object(json: &str) -> Result<TraceSession, String> {
