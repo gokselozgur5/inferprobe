@@ -54,7 +54,11 @@ fn parse_bench(args: &[String]) -> Result<CliCommand, String> {
             _ => i += 1,
         }
     }
-    Ok(CliCommand::Bench { iterations, out_file, chrome_trace_file })
+    Ok(CliCommand::Bench {
+        iterations,
+        out_file,
+        chrome_trace_file,
+    })
 }
 
 fn parse_compare(args: &[String]) -> Result<CliCommand, String> {
@@ -78,12 +82,19 @@ fn parse_compare(args: &[String]) -> Result<CliCommand, String> {
             _ => i += 1,
         }
     }
-    Ok(CliCommand::Compare { baseline_file, current_file, max_p99_pct, max_mean_pct })
+    Ok(CliCommand::Compare {
+        baseline_file,
+        current_file,
+        max_p99_pct,
+        max_mean_pct,
+    })
 }
 
 fn parse_inspect(args: &[String]) -> Result<CliCommand, String> {
     if args.is_empty() {
         return Err("inspect requires <trace.json>".into());
     }
-    Ok(CliCommand::Inspect { file: args[0].clone() })
+    Ok(CliCommand::Inspect {
+        file: args[0].clone(),
+    })
 }
