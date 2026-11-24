@@ -55,3 +55,18 @@ fn test_parse_trace_json_bracket_and_backslash_and_whitespace_defects() {
     let bad_inner = "{\"spans\":[123, true, \"hello\"]}";
     assert!(crate::ndjson::parse_trace_json_or_ndjson(bad_inner).is_err());
 }
+
+#[test]
+fn test_parse_chrome_trace_events() {
+    let chrome_trace = r#"{"traceEvents":[{"name":"matmul","cat":"infer","ph":"X","ts":100,"dur":420,"pid":1,"tid":1,"args":{"device":"gpu0","rss_kb":64000}}]}"#;
+    let session =
+        crate::ndjson::parse_trace_json_or_ndjson(chrome_trace).expect("parse chrome trace");
+    assert_eq!(session.len(), 1);
+    let span = &session.spans()[0];
+    assert_eq!(span.name, "matmul");
+    assert_eq!(span.stage, "infer");
+    assert_eq!(span.start_us, 100);
+    assert_eq!(span.duration_us, 420);
+    assert_eq!(span.device, "gpu0");
+    assert_eq!(span.rss_kb, 64000);
+}
