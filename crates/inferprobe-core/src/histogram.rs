@@ -51,6 +51,10 @@ impl LatencyHistogram {
         self.samples.len()
     }
 
+    pub fn samples(&self) -> &[f64] {
+        &self.samples
+    }
+
     pub fn is_empty(&self) -> bool {
         self.samples.is_empty()
     }
