@@ -22,10 +22,10 @@ pub fn render_timeline_svg(session: &TraceSession) -> String {
     let max_end = session
         .spans()
         .iter()
-        .map(|s| s.start_us + s.duration_us)
+        .map(|s| s.start_us.saturating_add(s.duration_us))
         .max()
         .unwrap_or(1);
-    let total_span_us = (max_end - min_start).max(1);
+    let total_span_us = max_end.saturating_sub(min_start).max(1);
 
     let svg_w = 960;
     let row_h = 28;
