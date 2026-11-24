@@ -69,7 +69,7 @@ impl LatencyHistogram {
         let stddev_us = variance.sqrt();
         let jitter_us = if count > 1 {
             (1..count)
-                .map(|i| (sorted[i] - sorted[i - 1]).abs())
+                .map(|i| (self.samples[i] - self.samples[i - 1]).abs())
                 .sum::<f64>()
                 / ((count - 1) as f64)
         } else {
