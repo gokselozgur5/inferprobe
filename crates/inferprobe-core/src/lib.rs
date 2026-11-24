@@ -3,6 +3,7 @@
 //! Provides zero-dependency latency percentiles, structured tracing,
 //! Chrome Trace export, telemetry sampling, and regression gating.
 
+pub mod flamegraph;
 pub mod gate;
 pub mod histogram;
 pub mod hw;
@@ -10,6 +11,7 @@ pub mod ndjson;
 pub mod telemetry;
 pub mod trace;
 
+pub use flamegraph::{escape_html, render_html_report};
 pub use gate::{evaluate_regression, RegressionPolicy, RegressionReport};
 pub use histogram::{LatencyHistogram, LatencySummary};
 pub use hw::{collect_host_hardware, parse_nvidia_smi_csv, HardwareSnapshot};
