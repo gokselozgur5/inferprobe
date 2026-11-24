@@ -5,11 +5,13 @@
 
 pub mod gate;
 pub mod histogram;
+pub mod ndjson;
 pub mod telemetry;
 pub mod trace;
 
 pub use gate::{evaluate_regression, RegressionPolicy, RegressionReport};
 pub use histogram::{LatencyHistogram, LatencySummary};
+pub use ndjson::{parse_ndjson_spans, parse_span_line};
 pub use telemetry::{run_synthetic_pipeline, PipelineStageSpec, ProcessTelemetry};
 pub use trace::{Span, TraceSession};
 
