@@ -22,9 +22,7 @@ pub fn collect_host_hardware() -> HardwareSnapshot {
             gpu.power_w,
         )
     } else {
-        HardwareSnapshot::new(
-            platform, cpu_model, None, None, None, None, None, None,
-        )
+        HardwareSnapshot::new(platform, cpu_model, None, None, None, None, None, None)
     }
 }
 

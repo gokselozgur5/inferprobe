@@ -24,7 +24,10 @@ pub fn render_hw_table(hw: Option<&HardwareSnapshot>) -> String {
                 .unwrap_or_else(|| "None detected".into())
         ));
         if let Some(util) = h.gpu_util_pct {
-            out.push_str(&format!("<tr><th>GPU Utilization</th><td>{:.1}%</td></tr>\n", util));
+            out.push_str(&format!(
+                "<tr><th>GPU Utilization</th><td>{:.1}%</td></tr>\n",
+                util
+            ));
         }
         if let (Some(used), Some(total)) = (h.vram_used_mb, h.vram_total_mb) {
             out.push_str(&format!(
@@ -35,10 +38,16 @@ pub fn render_hw_table(hw: Option<&HardwareSnapshot>) -> String {
             ));
         }
         if let Some(temp) = h.temp_c {
-            out.push_str(&format!("<tr><th>GPU Temperature</th><td>{:.1} °C</td></tr>\n", temp));
+            out.push_str(&format!(
+                "<tr><th>GPU Temperature</th><td>{:.1} °C</td></tr>\n",
+                temp
+            ));
         }
         if let Some(pwr) = h.power_w {
-            out.push_str(&format!("<tr><th>GPU Power Draw</th><td>{:.1} W</td></tr>\n", pwr));
+            out.push_str(&format!(
+                "<tr><th>GPU Power Draw</th><td>{:.1} W</td></tr>\n",
+                pwr
+            ));
         }
         out.push_str("</table>\n");
     } else {
