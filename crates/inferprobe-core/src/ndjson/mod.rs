@@ -3,6 +3,8 @@
 pub mod parser_helpers;
 pub mod skip;
 pub mod span_parser;
+#[cfg(test)]
+mod tests;
 
 pub use parser_helpers::skip_whitespace;
 pub use span_parser::parse_span_line;
