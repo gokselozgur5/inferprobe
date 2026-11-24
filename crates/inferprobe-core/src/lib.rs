@@ -1,5 +1,7 @@
 //! Deterministic profiling primitives for Edge AI and pipeline execution.
 
+pub mod telemetry;
+pub use telemetry::{run_synthetic_pipeline, PipelineStageSpec, ProcessTelemetry};
 pub mod gate;
 pub mod histogram;
 pub use gate::{evaluate_regression, RegressionPolicy, RegressionReport};
