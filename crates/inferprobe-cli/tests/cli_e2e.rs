@@ -69,7 +69,16 @@ fn test_cli_bench_cmd_json_and_gate() {
     assert!(out.contains("\"runs\":3") && out.contains("\"passed\":true"));
 
     let fail = Command::new(bin)
-        .args(["bench", "--runs", "2", "--max-p99-ms", "0.0001", "--", "echo", "ok"])
+        .args([
+            "bench",
+            "--runs",
+            "2",
+            "--max-p99-ms",
+            "0.0001",
+            "--",
+            "echo",
+            "ok",
+        ])
         .status()
         .expect("bench gate fail");
     assert_eq!(fail.code(), Some(1));
