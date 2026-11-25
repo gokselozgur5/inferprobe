@@ -56,3 +56,21 @@ fn test_cli_bench_compare_flow() {
         .expect("inspect");
     assert!(status.success());
 }
+
+#[test]
+fn test_cli_bench_cmd_json_and_gate() {
+    let bin = env!("CARGO_BIN_EXE_inferprobe");
+    let ok = Command::new(bin)
+        .args(["bench", "--runs", "3", "--json", "--", "echo", "ok"])
+        .output()
+        .expect("bench json");
+    assert!(ok.status.success());
+    let out = String::from_utf8_lossy(&ok.stdout);
+    assert!(out.contains("\"runs\":3") && out.contains("\"passed\":true"));
+
+    let fail = Command::new(bin)
+        .args(["bench", "--runs", "2", "--max-p99-ms", "0.0001", "--", "echo", "ok"])
+        .status()
+        .expect("bench gate fail");
+    assert_eq!(fail.code(), Some(1));
+}
