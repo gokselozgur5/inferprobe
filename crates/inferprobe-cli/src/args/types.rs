@@ -7,6 +7,13 @@ pub enum CliCommand {
         out_file: Option<String>,
         chrome_trace_file: Option<String>,
     },
+    BenchCmd {
+        cmd: String,
+        args: Vec<String>,
+        runs: usize,
+        max_p99_ms: Option<f64>,
+        json: bool,
+    },
     Compare {
         baseline_file: String,
         current_file: String,

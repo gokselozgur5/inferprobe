@@ -27,6 +27,9 @@ pub fn parse_cli_args(args: &[String]) -> Result<CliCommand, String> {
 }
 
 fn parse_bench(args: &[String]) -> Result<CliCommand, String> {
+    if let Some(sep) = args.iter().position(|a| a == "--") {
+        return parse_bench_cmd(&args[..sep], &args[sep + 1..]);
+    }
     let mut iterations = 100;
     let mut out_file = None;
     let mut chrome_trace_file = None;
@@ -52,6 +55,38 @@ fn parse_bench(args: &[String]) -> Result<CliCommand, String> {
         iterations,
         out_file,
         chrome_trace_file,
+    })
+}
+
+fn parse_bench_cmd(flags: &[String], cmd_parts: &[String]) -> Result<CliCommand, String> {
+    if cmd_parts.is_empty() {
+        return Err("bench requires <cmd...> after '--'".into());
+    }
+    let (mut runs, mut max_p99_ms, mut json, mut i) = (10usize, None, false, 0);
+    while i < flags.len() {
+        match flags[i].as_str() {
+            "--runs" if i + 1 < flags.len() => {
+                runs = flags[i + 1].parse().map_err(|_| "invalid --runs".to_string())?;
+                i += 2;
+            }
+            "--max-p99-ms" if i + 1 < flags.len() => {
+                let v: f64 = flags[i + 1].parse().map_err(|_| "invalid --max-p99-ms".to_string())?;
+                max_p99_ms = Some(v);
+                i += 2;
+            }
+            "--json" => {
+                json = true;
+                i += 1;
+            }
+            other => return Err(format!("unknown bench flag '{}'", other)),
+        }
+    }
+    Ok(CliCommand::BenchCmd {
+        cmd: cmd_parts[0].clone(),
+        args: cmd_parts[1..].to_vec(),
+        runs,
+        max_p99_ms,
+        json,
     })
 }
 
