@@ -66,11 +66,15 @@ fn parse_bench_cmd(flags: &[String], cmd_parts: &[String]) -> Result<CliCommand,
     while i < flags.len() {
         match flags[i].as_str() {
             "--runs" if i + 1 < flags.len() => {
-                runs = flags[i + 1].parse().map_err(|_| "invalid --runs".to_string())?;
+                runs = flags[i + 1]
+                    .parse()
+                    .map_err(|_| "invalid --runs".to_string())?;
                 i += 2;
             }
             "--max-p99-ms" if i + 1 < flags.len() => {
-                let v: f64 = flags[i + 1].parse().map_err(|_| "invalid --max-p99-ms".to_string())?;
+                let v: f64 = flags[i + 1]
+                    .parse()
+                    .map_err(|_| "invalid --max-p99-ms".to_string())?;
                 max_p99_ms = Some(v);
                 i += 2;
             }
