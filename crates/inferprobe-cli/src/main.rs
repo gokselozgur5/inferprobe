@@ -1,4 +1,5 @@
 mod args;
+mod cmd_bench;
 mod cmd_compare;
 mod cmd_hw;
 mod cmd_ingest;
@@ -11,6 +12,7 @@ use std::fs;
 use std::process;
 
 use args::{parse_cli_args, CliCommand};
+use cmd_bench::exec_bench_cmd;
 use cmd_compare::{exec_compare, parse_key};
 use cmd_hw::exec_hw;
 use cmd_ingest::exec_ingest;
@@ -28,6 +30,15 @@ fn main() {
             chrome_trace_file,
         }) => {
             exec_bench(iterations, out_file, chrome_trace_file);
+        }
+        Ok(CliCommand::BenchCmd {
+            cmd,
+            args,
+            runs,
+            max_p99_ms,
+            json,
+        }) => {
+            exec_bench_cmd(&cmd, &args, runs, max_p99_ms, json);
         }
         Ok(CliCommand::Compare {
             baseline_file,
@@ -67,6 +78,7 @@ fn print_usage() {
     println!("inferprobe - Edge AI, GPU & Pipeline Profiler");
     println!("Usage:");
     println!("  inferprobe bench [--iterations N] [--out FILE] [--chrome-trace FILE]");
+    println!("  inferprobe bench --runs <N> [--max-p99-ms <MS>] [--json] -- <cmd...>");
     println!(
         "  inferprobe compare <baseline.json> <current.json> [--max-p99-pct F] [--max-mean-pct F]"
     );
